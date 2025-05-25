@@ -16,8 +16,8 @@ function Home() {
                 const popularMovies = await getPopularMovies()
                 setMovies(popularMovies)
             } catch (err) {
-                console.log(err)
-                setErr("Failed to load movies...")
+                 console.error("Error loading popular movies:", err)
+                 setErr("Failed to load popular movies.")
             }
             finally {
                 setLoading(false)
@@ -27,10 +27,27 @@ function Home() {
         loadPopularMovies()
     }, [])
 
-    const handleSearch = (e) => {
+    const handleSearch = async (e) => {
         e.preventDefault()
+
+        if (!searchQuery.trim()) return
+        if (loading) return
+
+        setLoading(true)
+        
+        try {
+            const searchResults = await searchMovies(searchQuery)
+            setMovies(searchResults)
+            setErr(null)
+        } catch (err) {
+            console.error("Error during search:", err)
+            setErr("Search failed.")
+        } finally {
+            setLoading(false)
+        }
+
+
         setSearchQuery("")
-        alert(searchQuery)
     }
 
     return (
@@ -46,11 +63,22 @@ function Home() {
                 <button type="submit" className="search-button">Search</button>
 
             </form>
-            <div className="movies-grid">
-                {movies.map(movie => 
-                    <MovieCard movie={movie} key={movie.id}/>
-                )}
-            </div>
+
+            {err && <div className="error">{err}</div>}
+
+            {loading ? (
+                <div className="loading">Loading...</div>
+            ) :
+                (
+                     <div className="movies-grid">
+                        {movies.map(movie => 
+                            <MovieCard movie={movie} key={movie.id}/>
+                        )}
+                    </div>
+                )
+            }
+
+           
         </div>
     )
 }
